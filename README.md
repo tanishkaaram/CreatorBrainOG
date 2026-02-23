@@ -1,4 +1,4 @@
-# 🧠 CreatorBrain
+# 🧠 CreatorBrainOG
 
 CreatorBrain is a high-performance AI content strategist for Instagram creators. It analyzes profile patterns, interaction metrics, and content themes to generate personalized growth blueprints.
 
