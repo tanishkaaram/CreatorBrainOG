@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="https://via.placeholder.com/150" alt="CreatorBrainOG Logo" width="120" height="120">
-  <h1>🧠 CreatorBrainOG</h1>
+  <h1>🧠 CreatorBrainOG (ReWearReality)</h1>
   <p>A high-performance AI content strategist for Instagram creators. Analyze profile patterns, interaction metrics, and content themes to generate personalized growth blueprints.</p>
   
   <h3>🌍 Live Demo: <a href="https://creator-brain-og.vercel.app">creator-brain-og.vercel.app</a></h3>
