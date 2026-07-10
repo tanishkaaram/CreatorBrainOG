@@ -21,19 +21,19 @@ Here is a quick look at how **CreatorBrainOG** works, from logging in to generat
 ### 1. Welcome & Login
 *The entry point for creators.*
 <p align="center">
-  <img src="./public/screenshots/1-login.png" alt="Login Page Placeholder" width="800">
+  <img src="./login.png" alt="Login Page Placeholder" width="800">
 </p>
 
 ### 2. Analysis Dashboard
 *Real-time metrics, engagement calculations, and core data visualizations.*
 <p align="center">
-  <img src="./public/screenshots/2-dashboard.png" alt="Dashboard Placeholder" width="800">
+  <img src="./dashboard.png" alt="Dashboard Placeholder" width="800">
 </p>
 
 ### 3. Key Points & Growth Blueprint
 *The AI-powered strategy, featuring semantic analysis and personalized suggestions.*
 <p align="center">
-  <img src="./public/screenshots/3-keypoints.png" alt="Keypoints Placeholder" width="800">
+  <img src="./keypoints.png" alt="Keypoints Placeholder" width="800">
 </p>
 
 ---
