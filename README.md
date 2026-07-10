@@ -91,7 +91,7 @@ Contributions are always welcome! Feel free to open an issue or submit a Pull Re
 
 ## ⚖️ Copyright & Usage Restriction
 
-© 2026 Tanishka R (ReWearReality). All Rights Reserved.
+© 2026 Tanishka R (CreatorBrainOG). All Rights Reserved.
 
 This repository and its source code are provided for portfolio evaluation and recruiter review ONLY.
 
