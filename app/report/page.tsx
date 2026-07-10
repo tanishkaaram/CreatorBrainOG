@@ -58,7 +58,7 @@ export default function ReportPage({ params }: { params: { id: string } }) {
                         <div className="pb-8 border-b border-white/5 flex justify-between items-end">
                             <div>
                                 <h2 className="text-4xl font-black mb-2">{dna.archetype}</h2>
-                                <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Public Strategy Protocol • Verified by CreatorBrain AI</p>
+                                <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Public Strategy Protocol • Verified by CreatorBrainOG AI</p>
                             </div>
                             <div className="text-right">
                                 <p className="text-sm font-bold">{new Date().toLocaleDateString()}</p>
@@ -124,7 +124,7 @@ export default function ReportPage({ params }: { params: { id: string } }) {
                         </div>
 
                         <div className="pt-8 border-t border-white/5 text-center">
-                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">This report was generated automatically by CreatorBrain Growth Intelligence Engine.</p>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">This report was generated automatically by CreatorBrainOG Growth Intelligence Engine.</p>
                         </div>
                     </div>
                 </div>

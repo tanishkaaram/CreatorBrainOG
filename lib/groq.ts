@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Groq AI wrapper for CreatorBrain
+// Groq AI wrapper for CreatorBrainOG
 // Using Llama 3.3 70B for high-performance content analysis.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -94,7 +94,7 @@ export async function buildCreatorDNAWithGroq(
     localAnalysis: Partial<CreatorDNA>,
     nicheData: any
 ): Promise<Partial<CreatorDNA>> {
-    const systemPrompt = `You are CreatorBrain's AI engine. You analyze Instagram creator data and return a JSON object with:
+    const systemPrompt = `You are CreatorBrainOG's AI engine. You analyze Instagram creator data and return a JSON object with:
 {
   "archetype": "${nicheData.archetype}",
   "strengths": ["exactly 3 specific strengths based on ${nicheData.content_style}"],

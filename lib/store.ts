@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Zustand global store for CreatorBrain
+// Zustand global store for CreatorBrainOG
 // ─────────────────────────────────────────────────────────────────────────────
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';

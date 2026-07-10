@@ -28,7 +28,7 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <span className="font-bold text-xl tracking-tight text-white flex items-center">
-                            CreatorBrain<span className="w-1.5 h-1.5 bg-cyan-500 rounded-full ml-1" />
+                            CreatorBrainOG<span className="w-1.5 h-1.5 bg-cyan-500 rounded-full ml-1" />
                         </span>
                     </div>
 
@@ -56,7 +56,7 @@ export default function LandingPage() {
             {/* Footer */}
             <footer className="relative z-10 border-t border-white/5 py-16 px-6 bg-[#0A0A12]/50">
                 <div className="max-w-4xl mx-auto text-center space-y-4">
-                    <p className="text-zinc-300 font-medium">CreatorBrain — AI Growth Intelligence</p>
+                    <p className="text-zinc-300 font-medium">CreatorBrainOG — AI Growth Intelligence</p>
                     <p className="text-zinc-500 text-sm">Built for creators everywhere</p>
                 </div>
             </footer>

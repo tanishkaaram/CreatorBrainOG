@@ -79,7 +79,7 @@ export default function SettingsPage() {
                         >
                             <Trash2 className="w-4 h-4" /> Reset Application Cache
                         </button>
-                        <p className="text-[10px] text-zinc-700 uppercase tracking-widest font-black">CreatorBrain v1.0.0-beta</p>
+                        <p className="text-[10px] text-zinc-700 uppercase tracking-widest font-black">CreatorBrainOG v1.0.0-beta</p>
                     </div>
                 </div>
             </div>

@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// CreatorBrain TypeScript Type Definitions
+// CreatorBrainOG TypeScript Type Definitions
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type NicheType =

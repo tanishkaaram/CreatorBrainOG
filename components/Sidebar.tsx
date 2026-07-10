@@ -33,7 +33,7 @@ export default function Sidebar() {
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-600 to-yellow-500 flex items-center justify-center font-bold text-lg">
                         C
                     </div>
-                    <span className="font-bold text-xl tracking-tight">CreatorBrain</span>
+                    <span className="font-bold text-xl tracking-tight">CreatorBrainOG</span>
                 </Link>
             </div>
 

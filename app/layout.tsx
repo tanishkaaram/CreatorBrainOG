@@ -16,12 +16,12 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-    title: 'CreatorBrain — AI Growth Intelligence for Instagram Creators',
+    title: 'CreatorBrainOG — AI Growth Intelligence for Instagram Creators',
     description:
         'Know exactly what to post. Before you post it. AI-powered content strategy for Instagram creators across any niche.',
     keywords: 'instagram creator, ai content strategy, creator analytics, instagram growth, content ideas',
     openGraph: {
-        title: 'CreatorBrain',
+        title: 'CreatorBrainOG',
         description: 'AI-powered growth intelligence for Instagram creators',
         type: 'website',
     },

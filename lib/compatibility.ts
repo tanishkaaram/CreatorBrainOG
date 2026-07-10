@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// CreatorBrain Compatibility Scoring Algorithm
+// CreatorBrainOG Compatibility Scoring Algorithm
 // 
 // The score measures how well a content trend "fits" a specific creator.
 // Formula:

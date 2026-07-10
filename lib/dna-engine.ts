@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// CreatorBrain DNA Engine — Local Analysis Logic
+// CreatorBrainOG DNA Engine — Local Analysis Logic
 // Calculates engagement metrics, patterns, and consistency from post data.
 // GPT is called AFTER this to add semantic analysis (archetype, themes).
 // ─────────────────────────────────────────────────────────────────────────────

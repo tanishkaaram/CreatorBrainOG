@@ -1,7 +1,9 @@
 <div align="center">
-  <img src="https://via.placeholder.com/150" alt="CreatorBrain Logo" width="120" height="120">
+  <img src="https://via.placeholder.com/150" alt="CreatorBrainOG Logo" width="120" height="120">
   <h1>🧠 CreatorBrainOG</h1>
   <p>A high-performance AI content strategist for Instagram creators. Analyze profile patterns, interaction metrics, and content themes to generate personalized growth blueprints.</p>
+  
+  <h3>🌍 Live Demo: <a href="https://creator-brain-og.vercel.app">creator-brain-og.vercel.app</a></h3>
   
   <p>
     <img alt="Next.js" src="https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js">
@@ -15,7 +17,7 @@
 
 ## 📸 Screenshots & Walkthrough
 
-Here is a quick look at how **CreatorBrain** works, from logging in to generating deep insights:
+Here is a quick look at how **CreatorBrainOG** works, from logging in to generating deep insights:
 
 ### 1. Welcome & Login
 *The entry point for creators.*
