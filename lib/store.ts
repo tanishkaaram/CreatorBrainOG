@@ -84,7 +84,7 @@ export const useCreatorStore = create<CreatorStore>()(
                 }),
         }),
         {
-            name: 'creatorbrain-store',
+            name: 'creatorbrainog-store',
             partialize: (state) => ({
                 selectedNiche: state.selectedNiche,
                 bharatMode: state.bharatMode,
