@@ -57,6 +57,8 @@ export interface Post {
     duration?: number;           // seconds, Reels only
     thumbnail?: string;          // URL
     engagement_rate?: number;    // calculated: (likes+comments+saves)/followers * 100
+    date?: string;
+    is_video?: boolean;
 }
 
 // ─── Creator DNA ─────────────────────────────────────────────────────────────

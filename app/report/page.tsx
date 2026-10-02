@@ -7,8 +7,9 @@ import { useCreatorStore } from '@/lib/store';
 import { FileText, Download, Share2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
-export default function ReportPage({ params }: { params: { id: string } }) {
+export default function ReportPage({ params }: { params?: { id?: string } }) {
     const { dna, profile } = useCreatorStore();
+    const reportId = params?.id || 'CBOG-LATEST';
 
     if (!dna || !profile) {
         return (
@@ -62,7 +63,7 @@ export default function ReportPage({ params }: { params: { id: string } }) {
                             </div>
                             <div className="text-right">
                                 <p className="text-sm font-bold">{new Date().toLocaleDateString()}</p>
-                                <p className="text-[10px] text-zinc-700 uppercase font-black">Report ID: {params.id}</p>
+                                <p className="text-[10px] text-zinc-700 uppercase font-black">Report ID: {reportId}</p>
                             </div>
                         </div>
 

@@ -16,6 +16,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+    metadataBase: new URL('https://creator-brain-og.vercel.app'),
     title: 'CreatorBrainOG — AI Growth Intelligence for Instagram Creators',
     description:
         'Know exactly what to post. Before you post it. AI-powered content strategy for Instagram creators across any niche.',

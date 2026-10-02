@@ -39,8 +39,8 @@ export default function LandingPage() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <Link href="/auth/signin" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors px-4">
-                            Login
+                        <Link href="/analyze" className="bg-cyan-500 hover:bg-cyan-400 text-black px-4 py-2 rounded-xl text-sm font-bold transition-all">
+                            Analyze Profile
                         </Link>
                     </div>
                 </div>
