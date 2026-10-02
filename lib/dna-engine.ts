@@ -1,7 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // CreatorBrainOG DNA Engine — Local Analysis Logic
 // Calculates engagement metrics, patterns, and consistency from post data.
-// GPT is called AFTER this to add semantic analysis (archetype, themes).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { CreatorProfile, Post, CreatorDNA, PostType, ReelDurationBucket } from '@/types';
@@ -30,7 +29,6 @@ const NICHE_BENCHMARKS: Record<string, number> = {
 
 export function calculateEngagementRate(post: Post, followerCount: number): number {
     if (!followerCount || followerCount === 0) return 0;
-    // Section 5 Formula: ((likes + comments + views) / followers * 100)
     const interactions = post.likes + post.comments + (post.video_views || post.views || 0);
     return parseFloat(((interactions / followerCount) * 100).toFixed(2));
 }
@@ -63,12 +61,11 @@ export function avgEngagementByType(
 }
 
 // ─── Total Reach Estimate ────────────────────────────────────────────────────
-// Section 5 Formula: sum of all video_views + (likes * 8 estimated)
 
 export function calculateTotalReach(posts: Post[]): number {
     return posts.reduce((acc, post) => {
         const views = post.video_views || post.views || 0;
-        const estimatedReach = views + (post.likes * 8); // Section 5: views + (likes * 8)
+        const estimatedReach = views + (post.likes * 8);
         return acc + estimatedReach;
     }, 0);
 }
@@ -109,7 +106,6 @@ export function bestReelDurationBucket(posts: Post[]): ReelDurationBucket {
 }
 
 // ─── Best Posting Time Slot ───────────────────────────────────────────────────
-// Section 3 FIX: day + hour combo with highest engagement
 
 export function bestPostingTimeSlot(posts: Post[]): string {
     if (posts.length < 5) return 'Need more posts to determine best time';
@@ -119,7 +115,7 @@ export function bestPostingTimeSlot(posts: Post[]): string {
     for (const post of posts) {
         const date = new Date(post.timestamp);
         const day = DAYS[date.getDay()];
-        const hour = date.getHours(); // 0-23
+        const hour = date.getHours();
         const key = `${day}:${hour}`;
 
         slotMap[key] = slotMap[key] || [];
@@ -150,7 +146,6 @@ export function bestPostingTimeSlot(posts: Post[]): string {
     return `${day} at ${fmt(hour)}`;
 }
 
-/** Returns { day, hour, hourEnd, label } for dashboard display. */
 export function bestPostingTimeSlotDetail(posts: Post[]): { day: string; hour: number; hourEnd: number; label: string; postCount: number } | null {
     if (posts.length < 5) return null;
     const slotMap: Record<string, number[]> = {};
@@ -184,7 +179,6 @@ export function bestPostingTimeSlotDetail(posts: Post[]): { day: string; hour: n
     return { day, hour, hourEnd, label, postCount: posts.length };
 }
 
-/** Engagement rate formula: sum(likes+comments+views) / (posts * followers) * 100 */
 export function realEngagementRateFromPosts(posts: Post[], followerCount: number): number | null {
     if (!posts.length || !followerCount) return null;
     const total = posts.reduce(
@@ -214,7 +208,7 @@ export function extractContentThemes(posts: Post[]): ThemeWithCount[] {
         const text = (post.caption || '').toLowerCase()
             .replace(/#\w+/g, ' ')
             .replace(/https?:\/\/\S+/g, ' ')
-            .replace(/[^\w\s]+/g, ' '); // More robust cleaning
+            .replace(/[^\w\s]+/g, ' ');
         const words = text.split(/\s+/).filter(w => w.length > 3 && !STOP_WORDS.has(w) && !/^\d+$/.test(w));
         for (const w of words) {
             count[w] = (count[w] || 0) + 1;
@@ -224,13 +218,10 @@ export function extractContentThemes(posts: Post[]): ThemeWithCount[] {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5);
 
-    // Calculate relative frequency for bar width
-    const total = sorted.reduce((acc, [_, v]) => acc + v, 0);
     return sorted.map(([name, value]) => ({ name, value }));
 }
 
-// ─── Consistency Metics ───────────────────────────────────────────────────────
-// Returns avg days between posts and a 0-100 score
+// ─── Consistency Metrics ───────────────────────────────────────────────────────
 
 export function calculateConsistency(posts: Post[]): { avgDays: number; score: number } {
     if (posts.length < 2) return { avgDays: 0, score: 0 };
@@ -247,7 +238,6 @@ export function calculateConsistency(posts: Post[]): { avgDays: number; score: n
 
     const avgDays = parseFloat((intervals.reduce((a, b) => a + b, 0) / intervals.length).toFixed(1));
 
-    // Score calculation: 1 day = 100, 3 days = 80, 7 days = 50, 14 days = 20, 30+ days = 0
     let score = 0;
     if (avgDays <= 1) score = 100;
     else if (avgDays <= 3) score = 100 - (avgDays - 1) * 10;
@@ -290,7 +280,7 @@ export function buildLocalDNA(profile: CreatorProfile): Partial<CreatorDNA> {
     const byType = avgEngagementByType(enrichedPosts, follower_count);
     const idealDuration = bestReelDurationBucket(enrichedPosts);
     const bestTime = bestPostingTimeSlot(enrichedPosts);
-    const { avgDays, score: consistency } = calculateConsistency(enrichedPosts);
+    const { score: consistency } = calculateConsistency(enrichedPosts);
     const engagementRate = overallEngagementRate(enrichedPosts, follower_count);
     const best = bestPostType(byType);
     const realThemes = extractContentThemes(enrichedPosts);
@@ -341,25 +331,30 @@ export function detectLocalNiche(text: string): {
 } {
     const lower = text.toLowerCase();
 
-    if (/sing|song|music|vocal|singer|cover|melody|raga|audio|tune|track|voice|acoustic|bgm|gaana|paattu|sur|musician|band|concert/.test(lower)) {
+    // 1. Singing / Music
+    if (/\b(singing|singer|singers|vocalist|vocals|vocal|songwriter|songwriting|raga|unplugged|acousticcover|vocalcover|gaana|paattu)\b/i.test(lower)) {
         return {
             niche: 'Singing/Music',
-            archetype: 'The Vocal Artist & Performer',
-            evidence: ['vocal performances', 'music covers', 'acoustic sessions'],
-            content_style: 'Soulful & expressive vocal performances with live instrumentation',
+            archetype: 'The Vocal Artist',
+            evidence: ['vocal performances', 'acoustic sessions', 'musical covers'],
+            content_style: 'Expressive vocal performances and musical showcases',
             top_content_themes: ['music', 'vocalcover', 'singing', 'acoustic', 'unplugged']
         };
     }
-    if (/dance|dancer|choreography|hiphop|salsa|classical|groove|freestyle|reels|steps/.test(lower)) {
+
+    // 2. Dance
+    if (/\b(dance|dancer|dancing|dancers|choreography|choreographer|hiphop|salsa|ballet|kathak|bharatanatyam|freestyledance)\b/i.test(lower)) {
         return {
             niche: 'Dance',
             archetype: 'The Movement Artist',
             evidence: ['dance routines', 'choreography highlights', 'rhythm & motion'],
             content_style: 'Dynamic choreography and trend dance performances',
-            top_content_themes: ['dance', 'choreography', 'reels', 'movement', 'groove']
+            top_content_themes: ['dance', 'choreography', 'dancer', 'movement', 'groove']
         };
     }
-    if (/workout|fit|gym|health|diet|trainer|body|muscle|fatloss|exercise|fitness/.test(lower)) {
+
+    // 3. Fitness
+    if (/\b(fitness|workout|gym|health|bodybuilding|powerlifting|calisthenics|fatloss|workoutroutine|fitnesscoach)\b/i.test(lower)) {
         return {
             niche: 'Fitness',
             archetype: 'The High-Performance Coach',
@@ -368,16 +363,20 @@ export function detectLocalNiche(text: string): {
             top_content_themes: ['fitness', 'workout', 'gym', 'health', 'motivation']
         };
     }
-    if (/food|recipe|cook|chef|eat|dish|tasty|yummy|kitchen|baking|streetfood|culinary/.test(lower)) {
+
+    // 4. Food
+    if (/\b(recipe|recipes|cooking|cook|chef|baking|culinary|foodie|gastronomy|streetfood|delicious|yummy)\b/i.test(lower)) {
         return {
             niche: 'Food',
             archetype: 'The Culinary Explorer',
-            evidence: ['recipes', 'cooking step-by-steps', 'food reviews'],
-            content_style: 'Mouthwatering quick recipes and culinary experiences',
+            evidence: ['recipe breakdowns', 'cooking tutorials', 'food reviews'],
+            content_style: 'Mouthwatering recipes and culinary experiences',
             top_content_themes: ['food', 'recipe', 'cooking', 'yummy', 'foodie']
         };
     }
-    if (/fashion|style|outfit|ootd|wear|lookbook|model|beauty|makeup|attire/.test(lower)) {
+
+    // 5. Fashion
+    if (/\b(fashion|outfit|ootd|lookbook|styling|stylist|runway|fashionstyle|attire|apparel)\b/i.test(lower)) {
         return {
             niche: 'Fashion',
             archetype: 'The Style Icon',
@@ -386,7 +385,9 @@ export function detectLocalNiche(text: string): {
             top_content_themes: ['fashion', 'ootd', 'style', 'outfit', 'beauty']
         };
     }
-    if (/comedy|funny|joke|meme|roast|prank|humor|skit|laugh|standup|troll/.test(lower)) {
+
+    // 6. Comedy
+    if (/\b(comedy|funny|joke|jokes|standup|humor|skit|pranks|prank|roast|funnyreels)\b/i.test(lower)) {
         return {
             niche: 'Comedy',
             archetype: 'The Humorist',
@@ -395,7 +396,9 @@ export function detectLocalNiche(text: string): {
             top_content_themes: ['comedy', 'funny', 'memes', 'relatable', 'skit']
         };
     }
-    if (/art|paint|draw|sketch|artist|illustration|craft|doodle|canvas|design/.test(lower)) {
+
+    // 7. Art
+    if (/\b(painting|painter|sketching|sketch|drawing|illustration|illustrator|artwork|canvasart|digitalart)\b/i.test(lower)) {
         return {
             niche: 'Art',
             archetype: 'The Visual Artist',
@@ -404,7 +407,9 @@ export function detectLocalNiche(text: string): {
             top_content_themes: ['art', 'drawing', 'artist', 'illustration', 'sketch']
         };
     }
-    if (/travel|explore|trip|wanderlust|adventure|vacation|vlog|destination|journey/.test(lower)) {
+
+    // 8. Travel
+    if (/\b(travel|traveler|travelvlog|wanderlust|backpacking|destination|tourism|exploreworld|adventuretour)\b/i.test(lower)) {
         return {
             niche: 'Travel',
             archetype: 'The Adventurer',
@@ -414,12 +419,23 @@ export function detectLocalNiche(text: string): {
         };
     }
 
+    // 9. Tech & Education
+    if (/\b(coding|programmer|developer|software|technology|tutorial|marketing|business|finance)\b/i.test(lower)) {
+        return {
+            niche: 'Education',
+            archetype: 'The Strategy Architect',
+            evidence: ['educational insights', 'strategy breakdowns', 'actionable tips'],
+            content_style: 'Structured value-driven breakdowns and informative guides',
+            top_content_themes: ['growth', 'strategy', 'tips', 'content', 'insights']
+        };
+    }
+
+    // Default neutral fallback
     return {
-        niche: 'Education',
-        archetype: 'The Strategy Architect',
-        evidence: ['educational insights', 'strategy breakdowns', 'actionable tips'],
-        content_style: 'Structured value-driven breakdowns and informative guides',
-        top_content_themes: ['growth', 'strategy', 'tips', 'content', 'insights']
+        niche: 'Lifestyle',
+        archetype: 'The Creative Voice',
+        evidence: ['personal blogging', 'creative content', 'lifestyle updates'],
+        content_style: 'Authentic personal storytelling and lifestyle content',
+        top_content_themes: ['lifestyle', 'creator', 'reels', 'daily', 'content']
     };
 }
-
