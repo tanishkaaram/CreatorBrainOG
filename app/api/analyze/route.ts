@@ -225,26 +225,41 @@ export async function POST(request: NextRequest) {
         });
 
         if (!apifyResponse.ok) {
-            console.warn(`[Apify Error] HTTP ${apifyResponse.status}: ${apifyResponse.statusText}. Using fallback analysis.`);
+            console.warn(`[Apify Error] HTTP ${apifyResponse.status}: ${apifyResponse.statusText}.`);
             clearTimeout(timeoutId);
-            const fallback = getFallbackData(username);
             return NextResponse.json({
-                ...fallback,
-                notice: `Instagram scraper returned ${apifyResponse.statusText}. Displaying sample analysis for @${username}.`
-            });
+                error: `Instagram scraper service returned an error (${apifyResponse.statusText}). Please verify the username @${username} and try again.`
+            }, { status: 502 });
         }
 
         const items = await apifyResponse.json();
 
         if (!items || items.length === 0) {
             clearTimeout(timeoutId);
-            const fallback = getFallbackData(username);
-            return NextResponse.json(fallback);
+            return NextResponse.json({
+                error: `Could not find Instagram profile @${username}. Please check that the handle is typed correctly.`
+            }, { status: 404 });
         }
 
         const profileData = items[0] as any;
 
-        const posts: Post[] = (profileData.latestPosts || []).map((post: any) => ({
+        // Check for Private Account or missing public data
+        if (profileData.isPrivate || profileData.private) {
+            clearTimeout(timeoutId);
+            return NextResponse.json({
+                error: `@${username} is a PRIVATE Instagram account. Instagram does not allow public scraping of private accounts. Please try a PUBLIC Instagram profile.`
+            }, { status: 400 });
+        }
+
+        const rawPosts = profileData.latestPosts || profileData.posts || [];
+        if (!rawPosts || rawPosts.length === 0) {
+            clearTimeout(timeoutId);
+            return NextResponse.json({
+                error: `@${username} has no public posts or videos available on Instagram for analysis.`
+            }, { status: 400 });
+        }
+
+        const posts: Post[] = rawPosts.map((post: any) => ({
             id: post.id || post.shortCode,
             type: post.type === 'Video' ? 'REEL' : (post.type === 'Sidecar' ? 'CAROUSEL_ALBUM' : 'IMAGE'),
             likes: post.likesCount || 0,
@@ -330,14 +345,8 @@ export async function POST(request: NextRequest) {
         clearTimeout(timeoutId);
         console.error('[Analyze Error]:', error);
 
-        // Handle timeout or unexpected errors gracefully with fallback data
-        const body = await request.clone().json().catch(() => ({}));
-        const username = body.username?.replace('@', '').trim() || 'creator';
-        const fallback = getFallbackData(username);
-
         return NextResponse.json({
-            ...fallback,
-            notice: `Live analysis encountered an issue (${error.message || 'Timeout'}). Displaying sample intelligence for @${username}.`
-        });
+            error: error.message || 'Live analysis encountered an unexpected issue.'
+        }, { status: 500 });
     }
 }
