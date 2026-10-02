@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Gemini AI wrapper for CreatorBrainOG
-// Using Gemini 1.5 Flash for high-performance content analysis.
+// Using Gemini 1.5 Flash for high-precision, deep-context content analysis.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -53,9 +53,12 @@ async function analyzeWithGemini(systemPrompt: string, userPrompt: string): Prom
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
         model: 'gemini-1.5-flash',
+        generationConfig: {
+            temperature: 0.6,
+        }
     });
 
-    const combinedPrompt = `${systemPrompt}\n\nUSER REQUEST: ${userPrompt}\n\nIMPORTANT: Output ONLY pure valid JSON. No explanations, no markdown wrapping.`;
+    const combinedPrompt = `${systemPrompt}\n\nUSER REQUEST: ${userPrompt}\n\nIMPORTANT: Output ONLY pure valid JSON. No conversational filler, no markdown fences.`;
 
     const result = await model.generateContent(combinedPrompt);
     const response = await result.response;
@@ -79,44 +82,42 @@ export async function detectNicheWithGemini(posts: Post[], bio: string = ''): Pr
     const localDetected = detectLocalNiche(allText);
 
     try {
-        const topPosts = [...posts].sort((a, b) => (b.engagement_rate || 0) - (a.engagement_rate || 0)).slice(0, 5);
+        const postSummary = posts.slice(0, 10).map((p, idx) =>
+            `[Post ${idx + 1}] Type: ${p.type} | Likes: ${p.likes} | Views: ${p.video_views || 0} | Caption: "${p.caption}" | Hashtags: ${p.hashtags?.join(', ') || 'none'}`
+        ).join('\n');
 
-        const systemPrompt = `Analyze these Instagram post captions and bio carefully.
-Your job is to:
+        const systemPrompt = `You are a world-class Instagram Content Strategist. Analyze this creator's Instagram bio and recent posts carefully.
 
-1. DETECT THE EXACT NICHE with high confidence
-Analyze captions in ALL languages present including Hindi, Tamil, Telugu, English mixed content.
-If captions contain singing, vocals, cover songs, or music references, the niche is Singing/Music.
-Detect the CONTENT TYPE first (what they do: sing, dance, teach, workout, cook) then detect style secondary.
-Never name a specific regional identity as the niche.
-Niche must be content-type based: Singing/Music, Dance, Fitness, Education, Comedy, Food, Fashion, Art, Travel, etc.
+PROFILE BIO: "${bio}"
 
-Captions: ${posts.map(p => p.caption).filter(Boolean).join(' | ')}
-Bio: ${bio}
-Top performing captions: ${topPosts.map(p => p.caption).join(' | ')}
+RECENT POSTS SUMMARY:
+${postSummary}
 
-Possible niches: Singing/Music, Dance, Fitness, Food, Education, Comedy, Lifestyle, Fashion, Travel, Business, Gaming, Art, Motivation
+YOUR JOB:
+1. Detect their EXACT content niche (e.g. Singing/Music, Dance, Fitness, Food, Education, Comedy, Fashion, Art, Travel, Business, Tech, Gaming, Lifestyle).
+2. Primary Rule: Classify by WHAT THEY ACTUALLY DO in their videos/captions. If they sing or post music covers, classify as Singing/Music. If they dance, classify as Dance. If they share recipes, classify as Food.
+3. Identify their unique creative style and archetype (e.g., "The Acoustic Vocal Innovator", "The Choreography Performer", "The High-Energy Humorist").
 
-2. OUTPUT FORMAT (JSON only):
+RETURN JSON ONLY:
 {
-  "detected_niche": "Singing/Music" | "Dance" | "Fitness" | "Food" | "Education" | "Comedy" | "Fashion" | "Art" | "Travel",
-  "confidence": 88,
-  "evidence": ["keyword1", "keyword2"],
-  "content_style": "description of their specific style",
-  "archetype": "The [relevant title for this niche]",
-  "top_content_themes": ["theme1", "theme2"],
-  "avoid_suggesting": ["unrelated niche1"]
+  "detected_niche": "Singing/Music" | "Dance" | "Fitness" | "Food" | "Education" | "Comedy" | "Fashion" | "Art" | "Travel" | "Lifestyle",
+  "confidence": 90,
+  "evidence": ["exact keyword or pattern 1", "exact keyword or pattern 2"],
+  "content_style": "detailed description of their unique visual & messaging style based on real posts",
+  "archetype": "The [Custom Creative Archetype Title]",
+  "top_content_themes": ["theme1", "theme2", "theme3"],
+  "avoid_suggesting": ["unrelated niche 1", "unrelated niche 2"]
 }
 `;
 
-        const userPrompt = `Determine niche and archetype for this creator based on captions and engagement.`;
+        const userPrompt = `Determine the precise niche, archetype, and style for this creator.`;
 
         const raw = await analyzeWithGemini(systemPrompt, userPrompt);
         const parsed = JSON.parse(raw);
 
         return {
             detected_niche: parsed.detected_niche || localDetected.niche,
-            confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 88,
+            confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 90,
             evidence: Array.isArray(parsed.evidence) && parsed.evidence.length > 0 ? parsed.evidence : localDetected.evidence,
             content_style: parsed.content_style || localDetected.content_style,
             archetype: parsed.archetype || localDetected.archetype,
@@ -145,60 +146,87 @@ export async function buildCreatorDNAWithGemini(
     nicheData: any
 ): Promise<Partial<CreatorDNA>> {
     try {
-        const systemPrompt = `You are CreatorBrainOG's AI engine powered by Gemini Flash. You analyze Instagram creator data and return a JSON object with:
+        const topPosts = [...profile.posts].sort((a, b) => (b.likes + (b.video_views || 0)) - (a.likes + (a.video_views || 0))).slice(0, 5);
+
+        const postList = topPosts.map((p, idx) =>
+            `Top Post ${idx + 1} (${p.type}): Likes: ${p.likes}, Views: ${p.video_views || 0}, Comments: ${p.comments}, Caption: "${p.caption}"`
+        ).join('\n');
+
+        const systemPrompt = `You are CreatorBrainOG's AI engine. Perform a deep, accurate content DNA analysis for creator @${profile.username}.
+
+CREATOR DETAILS:
+- Username: @${profile.username}
+- Bio: "${profile.bio || 'None'}"
+- Followers: ${profile.follower_count.toLocaleString()}
+- Detected Niche: ${nicheData.detected_niche}
+- Archetype: ${nicheData.archetype}
+- Content Style: ${nicheData.content_style}
+- Avg Engagement Rate: ${localAnalysis.engagement_rate?.toFixed(1)}%
+
+TOP PERFORMING POSTS:
+${postList}
+
+YOUR TASK:
+Analyze the actual captions and post performance to output a JSON object:
 {
   "archetype": "${nicheData.archetype}",
-  "strengths": ["exactly 3 specific strengths based on ${nicheData.content_style}"],
-  "weaknesses": ["exactly 2 specific weaknesses"],
-  "radar_scores": {"entertainment": 75, "education": 88, "inspiration": 82, "relatability": 90},
-  "top_themes": ${JSON.stringify(nicheData.top_content_themes)}
+  "strengths": [
+    "strength 1: highly specific insight referencing their real content tone or format",
+    "strength 2: specific observation about their audience engagement or style",
+    "strength 3: specific strength based on top performing posts"
+  ],
+  "weaknesses": [
+    "weakness 1: concrete content or format gap",
+    "weakness 2: optimization opportunity"
+  ],
+  "radar_scores": {
+    "entertainment": 0-100,
+    "education": 0-100,
+    "inspiration": 0-100,
+    "relatability": 0-100
+  },
+  "top_themes": ["theme1", "theme2", "theme3", "theme4", "theme5"]
 }
-Return ONLY valid JSON.`;
+`;
 
-        const userPrompt = `Analyze this creator:
-Niche: ${nicheData.detected_niche}
-Followers: ${profile.follower_count.toLocaleString()}
-Avg engagement rate: ${localAnalysis.engagement_rate?.toFixed(1)}%
-Best post type: ${localAnalysis.best_post_type}
-
-Content Evidence: ${nicheData.evidence.join(', ')}`;
+        const userPrompt = `Generate personalized Creator DNA for @${profile.username}.`;
 
         const raw = await analyzeWithGemini(systemPrompt, userPrompt);
         const parsed = JSON.parse(raw);
 
         return {
             archetype: parsed.archetype || nicheData.archetype,
-            strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [
-                `High performance in ${nicheData.detected_niche} content format`,
-                'Strong audience interaction and engagement rate',
+            strengths: Array.isArray(parsed.strengths) && parsed.strengths.length >= 2 ? parsed.strengths : [
+                `High audience engagement on ${nicheData.detected_niche} content`,
+                'Strong authentic connection in post captions',
                 'Consistent theme & positioning'
             ],
-            weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses : [
-                'Underutilizing multi-slide Carousel format',
-                'Hashtag optimization could reach wider non-follower audience'
+            weaknesses: Array.isArray(parsed.weaknesses) && parsed.weaknesses.length >= 1 ? parsed.weaknesses : [
+                'Underutilizing multi-slide Carousel format for deep value',
+                'Caption call-to-actions could be optimized for higher saves'
             ],
             radar_scores: parsed.radar_scores || {
-                entertainment: 82,
-                education: 75,
-                inspiration: 88,
-                relatability: 90
+                entertainment: nicheData.detected_niche === 'Singing/Music' || nicheData.detected_niche === 'Dance' || nicheData.detected_niche === 'Comedy' ? 92 : 75,
+                education: nicheData.detected_niche === 'Education' ? 88 : 70,
+                inspiration: 84,
+                relatability: 88
             },
-            top_themes: Array.isArray(parsed.top_themes) ? parsed.top_themes : nicheData.top_content_themes
+            top_themes: Array.isArray(parsed.top_themes) && parsed.top_themes.length > 0 ? parsed.top_themes : nicheData.top_content_themes
         };
     } catch (error: any) {
         console.warn('[Gemini DNA Build Fallback]:', error?.message || error);
         return {
             archetype: nicheData.archetype,
             strengths: [
-                `High engagement on ${nicheData.detected_niche} videos`,
-                'Consistent audience interaction',
-                'Clear niche positioning'
+                `High engagement on ${nicheData.detected_niche} posts`,
+                'Strong personal style and audience interaction',
+                'Clear content positioning'
             ],
             weaknesses: [
                 'Opportunity to post more multi-slide carousels',
-                'Caption call-to-actions can be expanded'
+                'Hashtag optimization can be improved'
             ],
-            radar_scores: { entertainment: 82, education: 75, inspiration: 88, relatability: 90 },
+            radar_scores: { entertainment: 82, education: 75, inspiration: 85, relatability: 88 },
             top_themes: nicheData.top_content_themes
         };
     }
@@ -212,27 +240,48 @@ export async function generateSuggestionsWithGemini(
     nicheData: any
 ): Promise<Partial<Suggestion>[]> {
     try {
-        const topPosts = [...profile.posts].sort((a, b) => (b.engagement_rate || 0) - (a.engagement_rate || 0)).slice(0, 5);
+        const topPosts = [...profile.posts].sort((a, b) => (b.likes + (b.video_views || 0)) - (a.likes + (a.video_views || 0))).slice(0, 5);
 
-        const systemPrompt = `Creator niche is: ${nicheData.detected_niche}
-Confidence: ${nicheData.confidence}%
-Their content style: ${nicheData.content_style}
-Do NOT suggest content from these niches: ${nicheData.avoid_suggesting.join(', ')}
+        const postList = topPosts.map((p, idx) =>
+            `Post ${idx + 1} (${p.type}): Caption: "${p.caption}" | Likes: ${p.likes}`
+        ).join('\n');
 
-Generate 6 content suggestions ONLY for ${nicheData.detected_niche} niche in English.
+        const systemPrompt = `You are CreatorBrainOG's elite AI strategist. Generate 6 hyper-customized content ideas for Instagram creator @${profile.username}.
 
-Each suggestion MUST be an object inside a "suggestions" JSON array containing:
-- title: string
-- concept: string
-- hook: string
-- format: "Reel" | "Carousel" | "Image"
-- why_it_fits: string
-- execution_tips: string
-- compatibility_score: number 0-100
-- hashtags: string array
+CREATOR DATA:
+- Niche: ${nicheData.detected_niche}
+- Archetype: ${dna.archetype}
+- Content Style: ${nicheData.content_style}
+- Bio: "${profile.bio || ''}"
+
+THEIR TOP PERFORMING POSTS:
+${postList}
+
+RULES:
+1. Every suggestion must be 100% relevant to ${nicheData.detected_niche} and build directly on their real top content.
+2. Write ALL caption hooks and text in English.
+3. Include specific execution tips and high-converting hashtag strategies.
+
+OUTPUT JSON FORMAT:
+{
+  "suggestions": [
+    {
+      "title": "Specific, compelling title matching their niche",
+      "concept": "Detailed creative concept describing what to film or create",
+      "hook": "High-converting opening line for the caption",
+      "format": "Reel" | "Carousel" | "Image",
+      "duration": "15-30s" or "N/A",
+      "why_it_fits": "Explanation directly connecting to their actual top performing posts",
+      "execution_tips": "Technical filming/editing advice",
+      "compatibility_score": 92,
+      "boost_prediction": "+28% engagement",
+      "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"]
+    }
+  ]
+}
 `;
 
-        const userPrompt = `Base suggestions on top posts: ${topPosts.map(p => p.caption).join(' | ')}. Return JSON with "suggestions" array.`;
+        const userPrompt = `Generate 6 hyper-specific content suggestions for @${profile.username}.`;
 
         const raw = await analyzeWithGemini(systemPrompt, userPrompt);
         const parsed = JSON.parse(raw);
