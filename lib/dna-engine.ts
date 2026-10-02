@@ -329,3 +329,97 @@ export function buildEngagementHeatmap(posts: Post[]): number[][] {
     }
     return grid;
 }
+
+// ─── Smart Local Niche Detection ───────────────────────────────────────────────
+
+export function detectLocalNiche(text: string): {
+    niche: string;
+    archetype: string;
+    evidence: string[];
+    content_style: string;
+    top_content_themes: string[];
+} {
+    const lower = text.toLowerCase();
+
+    if (/sing|song|music|vocal|singer|cover|melody|raga|audio|tune|track|voice|acoustic|bgm|gaana|paattu|sur|musician|band|concert/.test(lower)) {
+        return {
+            niche: 'Singing/Music',
+            archetype: 'The Vocal Artist & Performer',
+            evidence: ['vocal performances', 'music covers', 'acoustic sessions'],
+            content_style: 'Soulful & expressive vocal performances with live instrumentation',
+            top_content_themes: ['music', 'vocalcover', 'singing', 'acoustic', 'unplugged']
+        };
+    }
+    if (/dance|dancer|choreography|hiphop|salsa|classical|groove|freestyle|reels|steps/.test(lower)) {
+        return {
+            niche: 'Dance',
+            archetype: 'The Movement Artist',
+            evidence: ['dance routines', 'choreography highlights', 'rhythm & motion'],
+            content_style: 'Dynamic choreography and trend dance performances',
+            top_content_themes: ['dance', 'choreography', 'reels', 'movement', 'groove']
+        };
+    }
+    if (/workout|fit|gym|health|diet|trainer|body|muscle|fatloss|exercise|fitness/.test(lower)) {
+        return {
+            niche: 'Fitness',
+            archetype: 'The High-Performance Coach',
+            evidence: ['workout tutorials', 'fitness routines', 'nutrition guides'],
+            content_style: 'Motivational workout breakdowns and health advice',
+            top_content_themes: ['fitness', 'workout', 'gym', 'health', 'motivation']
+        };
+    }
+    if (/food|recipe|cook|chef|eat|dish|tasty|yummy|kitchen|baking|streetfood|culinary/.test(lower)) {
+        return {
+            niche: 'Food',
+            archetype: 'The Culinary Explorer',
+            evidence: ['recipes', 'cooking step-by-steps', 'food reviews'],
+            content_style: 'Mouthwatering quick recipes and culinary experiences',
+            top_content_themes: ['food', 'recipe', 'cooking', 'yummy', 'foodie']
+        };
+    }
+    if (/fashion|style|outfit|ootd|wear|lookbook|model|beauty|makeup|attire/.test(lower)) {
+        return {
+            niche: 'Fashion',
+            archetype: 'The Style Icon',
+            evidence: ['outfit styling', 'fashion trends', 'lookbooks'],
+            content_style: 'Aesthetic outfit inspiration and visual lookbooks',
+            top_content_themes: ['fashion', 'ootd', 'style', 'outfit', 'beauty']
+        };
+    }
+    if (/comedy|funny|joke|meme|roast|prank|humor|skit|laugh|standup|troll/.test(lower)) {
+        return {
+            niche: 'Comedy',
+            archetype: 'The Humorist',
+            evidence: ['relatable skits', 'comedy reels', 'satirical humor'],
+            content_style: 'High-energy relatable comedy skits and observational humor',
+            top_content_themes: ['comedy', 'funny', 'memes', 'relatable', 'skit']
+        };
+    }
+    if (/art|paint|draw|sketch|artist|illustration|craft|doodle|canvas|design/.test(lower)) {
+        return {
+            niche: 'Art',
+            archetype: 'The Visual Artist',
+            evidence: ['artwork creation', 'illustration process', 'speed painting'],
+            content_style: 'Satisfying art creation process and creative showcases',
+            top_content_themes: ['art', 'drawing', 'artist', 'illustration', 'sketch']
+        };
+    }
+    if (/travel|explore|trip|wanderlust|adventure|vacation|vlog|destination|journey/.test(lower)) {
+        return {
+            niche: 'Travel',
+            archetype: 'The Adventurer',
+            evidence: ['travel vlogs', 'destination breakdowns', 'scenic spots'],
+            content_style: 'Immersive travel guides and cinematic location showcases',
+            top_content_themes: ['travel', 'explore', 'adventure', 'wanderlust', 'vlog']
+        };
+    }
+
+    return {
+        niche: 'Education',
+        archetype: 'The Strategy Architect',
+        evidence: ['educational insights', 'strategy breakdowns', 'actionable tips'],
+        content_style: 'Structured value-driven breakdowns and informative guides',
+        top_content_themes: ['growth', 'strategy', 'tips', 'content', 'insights']
+    };
+}
+

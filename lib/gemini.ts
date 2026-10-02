@@ -5,6 +5,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { CreatorProfile, CreatorDNA, Suggestion, Post } from '@/types';
+import { detectLocalNiche } from './dna-engine';
 
 function extractJson(text: string): string {
     if (!text) return '{}';
@@ -65,7 +66,7 @@ async function analyzeWithGemini(systemPrompt: string, userPrompt: string): Prom
 
 // ─── Step 1: Detect Exact Niche via Gemini Flash ────────────────────────────
 
-export async function detectNicheWithGemini(posts: Post[]): Promise<{
+export async function detectNicheWithGemini(posts: Post[], bio: string = ''): Promise<{
     detected_niche: string;
     confidence: number;
     evidence: string[];
@@ -74,48 +75,37 @@ export async function detectNicheWithGemini(posts: Post[]): Promise<{
     top_content_themes: string[];
     avoid_suggesting: string[];
 }> {
+    const allText = posts.map(p => p.caption).join(' ') + ' ' + bio;
+    const localDetected = detectLocalNiche(allText);
+
     try {
         const topPosts = [...posts].sort((a, b) => (b.engagement_rate || 0) - (a.engagement_rate || 0)).slice(0, 5);
 
-        const systemPrompt = `Analyze these Instagram post captions and engagement data carefully.
+        const systemPrompt = `Analyze these Instagram post captions and bio carefully.
 Your job is to:
 
 1. DETECT THE EXACT NICHE with high confidence
 Analyze captions in ALL languages present including Hindi, Tamil, Telugu, English mixed content.
-If captions contain Hindi singing references AND Tamil singing references, the niche is Singing/Music not Tamil Singer specifically.
-Detect the CONTENT TYPE first (what they do: sing, dance, teach) then detect LANGUAGE/STYLE secondary.
+If captions contain singing, vocals, cover songs, or music references, the niche is Singing/Music.
+Detect the CONTENT TYPE first (what they do: sing, dance, teach, workout, cook) then detect style secondary.
 Never name a specific regional identity as the niche.
-Niche must be content-type based: Singing, Dance, Fitness, Education, Comedy, Food, Fashion, etc.
-
-Multi-language creators: if captions mix Hindi + Tamil + English around the same content type, classify as that content type with note: Multi-language [content type] creator.
+Niche must be content-type based: Singing/Music, Dance, Fitness, Education, Comedy, Food, Fashion, Art, Travel, etc.
 
 Captions: ${posts.map(p => p.caption).filter(Boolean).join(' | ')}
+Bio: ${bio}
 Top performing captions: ${topPosts.map(p => p.caption).join(' | ')}
 
-Look for:
-- Repeated keywords, themes, topics (across any language)
-- Type of content described in captions
-- Hashtags used
-- Emotional tone of captions
-- What the creator is clearly showing or doing
+Possible niches: Singing/Music, Dance, Fitness, Food, Education, Comedy, Lifestyle, Fashion, Travel, Business, Gaming, Art, Motivation
 
-Possible niches: Singing, Dance, Fitness, Food, Education, Comedy, Lifestyle, Fashion, Travel, Business, Gaming, Art, Motivation
-
-2. CONFIDENCE CHECK
-Only assign a niche if you see clear evidence in captions.
-If singing keywords appear most: niche = "Singing"
-If dance keywords appear most: niche = "Dance"
-Do not mix niches unless content is genuinely mixed.
-
-3. OUTPUT FORMAT (JSON only, no other text):
+2. OUTPUT FORMAT (JSON only):
 {
-  "detected_niche": "exact niche name",
-  "confidence": 85,
-  "evidence": ["keyword1", "keyword2", "keyword3"],
+  "detected_niche": "Singing/Music" | "Dance" | "Fitness" | "Food" | "Education" | "Comedy" | "Fashion" | "Art" | "Travel",
+  "confidence": 88,
+  "evidence": ["keyword1", "keyword2"],
   "content_style": "description of their specific style",
   "archetype": "The [relevant title for this niche]",
-  "top_content_themes": ["theme1", "theme2", "theme3"],
-  "avoid_suggesting": ["unrelated niche1", "unrelated niche2"]
+  "top_content_themes": ["theme1", "theme2"],
+  "avoid_suggesting": ["unrelated niche1"]
 }
 `;
 
@@ -125,23 +115,23 @@ Do not mix niches unless content is genuinely mixed.
         const parsed = JSON.parse(raw);
 
         return {
-            detected_niche: parsed.detected_niche || 'Education',
+            detected_niche: parsed.detected_niche || localDetected.niche,
             confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 88,
-            evidence: Array.isArray(parsed.evidence) ? parsed.evidence : ['content', 'engagement'],
-            content_style: parsed.content_style || 'High-value engaging content',
-            archetype: parsed.archetype || 'The Content Strategist',
-            top_content_themes: Array.isArray(parsed.top_content_themes) ? parsed.top_content_themes : ['tips', 'growth'],
+            evidence: Array.isArray(parsed.evidence) && parsed.evidence.length > 0 ? parsed.evidence : localDetected.evidence,
+            content_style: parsed.content_style || localDetected.content_style,
+            archetype: parsed.archetype || localDetected.archetype,
+            top_content_themes: Array.isArray(parsed.top_content_themes) && parsed.top_content_themes.length > 0 ? parsed.top_content_themes : localDetected.top_content_themes,
             avoid_suggesting: Array.isArray(parsed.avoid_suggesting) ? parsed.avoid_suggesting : []
         };
     } catch (error: any) {
         console.warn('[Gemini Niche Detect Fallback]:', error?.message || error);
         return {
-            detected_niche: 'Education',
+            detected_niche: localDetected.niche,
             confidence: 85,
-            evidence: ['engagement', 'content_analysis'],
-            content_style: 'Value-driven instructional short videos',
-            archetype: 'The Strategy Architect',
-            top_content_themes: ['growth', 'reels', 'strategy'],
+            evidence: localDetected.evidence,
+            content_style: localDetected.content_style,
+            archetype: localDetected.archetype,
+            top_content_themes: localDetected.top_content_themes,
             avoid_suggesting: []
         };
     }
@@ -177,30 +167,30 @@ Content Evidence: ${nicheData.evidence.join(', ')}`;
         const parsed = JSON.parse(raw);
 
         return {
-            archetype: parsed.archetype || nicheData.archetype || 'The Educator',
+            archetype: parsed.archetype || nicheData.archetype,
             strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [
-                'High retention on short Reels',
-                'Strong comment section engagement',
-                'Consistent theme & messaging'
+                `High performance in ${nicheData.detected_niche} content format`,
+                'Strong audience interaction and engagement rate',
+                'Consistent theme & positioning'
             ],
             weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses : [
-                'Underutilizing Carousel format for deep value',
-                'Hashtag optimization could reach wider audience'
+                'Underutilizing multi-slide Carousel format',
+                'Hashtag optimization could reach wider non-follower audience'
             ],
             radar_scores: parsed.radar_scores || {
-                entertainment: 75,
-                education: 85,
-                inspiration: 80,
-                relatability: 88
+                entertainment: 82,
+                education: 75,
+                inspiration: 88,
+                relatability: 90
             },
             top_themes: Array.isArray(parsed.top_themes) ? parsed.top_themes : nicheData.top_content_themes
         };
     } catch (error: any) {
         console.warn('[Gemini DNA Build Fallback]:', error?.message || error);
         return {
-            archetype: nicheData.archetype || 'The Content Architect',
+            archetype: nicheData.archetype,
             strengths: [
-                'High engagement on video Reels',
+                `High engagement on ${nicheData.detected_niche} videos`,
                 'Consistent audience interaction',
                 'Clear niche positioning'
             ],
@@ -208,8 +198,8 @@ Content Evidence: ${nicheData.evidence.join(', ')}`;
                 'Opportunity to post more multi-slide carousels',
                 'Caption call-to-actions can be expanded'
             ],
-            radar_scores: { entertainment: 75, education: 85, inspiration: 80, relatability: 88 },
-            top_themes: nicheData.top_content_themes || ['growth', 'strategy']
+            radar_scores: { entertainment: 82, education: 75, inspiration: 88, relatability: 90 },
+            top_themes: nicheData.top_content_themes
         };
     }
 }
@@ -252,29 +242,6 @@ Each suggestion MUST be an object inside a "suggestions" JSON array containing:
         return [];
     } catch (error: any) {
         console.warn('[Gemini Suggestions Fallback]:', error?.message || error);
-        return [
-            {
-                title: 'High-Impact Niche Reel',
-                concept: 'Break down a common misconception in your niche with fast cuts.',
-                hook: 'Stop making this mistake if you want to grow faster.',
-                format: 'Reel',
-                duration: '15-30s',
-                compatibility_score: 95,
-                why_it_fits: 'Fits your top short video performance and audience style.',
-                execution_tips: 'Use dynamic captions and bold title overlays.',
-                hashtags: ['#creator', '#growth', '#strategy']
-            },
-            {
-                title: 'Step-by-Step Blueprint Carousel',
-                concept: 'A 5-slide visually structured breakdown of your main process.',
-                hook: 'Swipe through to copy my exact framework step-by-step.',
-                format: 'Carousel',
-                duration: 'N/A',
-                compatibility_score: 90,
-                why_it_fits: 'Carousels drive high save counts and profile shares.',
-                execution_tips: 'Keep slide 1 minimal with a compelling question.',
-                hashtags: ['#guide', '#tips', '#strategy']
-            }
-        ];
+        return [];
     }
 }
