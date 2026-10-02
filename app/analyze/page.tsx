@@ -42,8 +42,15 @@ function AnalyzePageContent() {
                 body: JSON.stringify({ username })
             });
             if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(errorText || 'Analysis failed');
+                let msg = 'Analysis failed';
+                try {
+                    const errorJson = await res.json();
+                    msg = errorJson.error || errorJson.notice || errorJson.message || msg;
+                } catch {
+                    const errorText = await res.text();
+                    msg = errorText || msg;
+                }
+                throw new Error(msg);
             }
             const result = await res.json();
 
